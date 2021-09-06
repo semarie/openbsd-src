@@ -17,7 +17,7 @@ main(int argc, char **argv)
 	int n, ret, c;
 
 	ret = 0;
-	while ((c = getopt(argc, argv, "fFiIjlpPrR:stT:")) != -1) {
+	while ((c = getopt(argc, argv, "fFiIjlpPrR:stT:u")) != -1) {
 		switch (c) {
 		case 'f':
 			ret |= check_inheritance();
@@ -60,8 +60,11 @@ main(int argc, char **argv)
 			n = strtonum(optarg, 1, INT_MAX, NULL);
 			ret |= do_pty(n);
 			break;
+		case 'u':
+			ret |= do_user();
+			break;
 		default:
-			fprintf(stderr, "usage: %s -[fFiIlpPrstT] [-R n]\n",
+			fprintf(stderr, "usage: %s -[fFiIlpPrstTu] [-R n]\n",
 			    __progname);
 			exit(1);
 		}

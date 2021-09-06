@@ -27,4 +27,5 @@ int do_regress(int);
 int do_reset_timer(void);
 int do_signal(void);
 int do_timer(void);
+int do_user(void);
 int do_tun(void);

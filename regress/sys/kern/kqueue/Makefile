@@ -4,7 +4,7 @@ PROG=	kqueue-test
 CFLAGS+=-Wall
 SRCS=	kqueue-pipe.c kqueue-fork.c main.c kqueue-process.c kqueue-random.c \
 	kqueue-pty.c kqueue-tun.c kqueue-signal.c kqueue-fdpass.c \
-	kqueue-flock.c kqueue-timer.c kqueue-regress.c
+	kqueue-flock.c kqueue-timer.c kqueue-regress.c kqueue-user.c
 LDADD=	-levent -lutil
 DPADD=	${LIBEVENT} ${LIBUTIL}
 
@@ -34,6 +34,8 @@ kq-flock: ${PROG}
 	./${PROG} -l
 kq-timer: ${PROG}
 	./${PROG} -i
+kq-user: ${PROG}
+	./${PROG} -u
 kq-invalid-timer: ${PROG}
 	./${PROG} -I
 kq-reset-timer: ${PROG}
@@ -66,6 +68,7 @@ TESTS+=	kq-regress-5
 TESTS+=	kq-reset-timer
 TESTS+=	kq-signal
 TESTS+=	kq-timer
+TESTS+=	kq-user
 
 REGRESS_TARGETS=${TESTS}
 # kq-tun broke at some point, apparently from a change in tun routing
