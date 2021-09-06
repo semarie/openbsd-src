@@ -40,8 +40,9 @@
 #define EVFILT_TIMER		(-7)	/* timers */
 #define EVFILT_DEVICE		(-8)	/* devices */
 #define EVFILT_EXCEPT		(-9)	/* exceptional conditions */
+#define EVFILT_USER		(-10)	/* user events */
 
-#define EVFILT_SYSCOUNT		9
+#define EVFILT_SYSCOUNT		10
 
 #define EV_SET(kevp, a, b, c, d, e, f) do {	\
 	struct kevent *__kevp = (kevp);		\
@@ -121,6 +122,24 @@ struct kevent {
 
 /* data/hint flags for EVFILT_DEVICE, shared with userspace */
 #define NOTE_CHANGE	0x00000001		/* device change event */
+
+/*
+ * data/hint flags/masks for EVFILT_USER, shared with userspace
+ *
+ * On input, the top two bits of fflags specifies how the lower twenty four
+ * bits should be applied to the stored value of fflags.
+ *
+ * On output, the top two bits will always be set to NOTE_FFNOP and the
+ * remaining twenty four bits will contain the stored fflags value.
+ */
+#define NOTE_FFNOP	0x00000000		/* ignore input fflags */
+#define NOTE_FFAND	0x40000000		/* AND fflags */
+#define NOTE_FFOR	0x80000000		/* OR fflags */
+#define NOTE_FFCOPY	0xc0000000		/* copy fflags */
+#define NOTE_FFCTRLMASK	0xc0000000		/* masks for operations */
+#define NOTE_FFLAGSMASK	0x00ffffff
+
+#define NOTE_TRIGGER	0x01000000		/* trigger for output */
 
 /*
  * This is currently visible to userland to work around broken
@@ -242,6 +261,7 @@ struct knote {
 	union {
 		struct		file *p_fp;	/* file data pointer */
 		struct		process *p_process;	/* process pointer */
+		int		p_hookid;	/* user hookid */
 	} kn_ptr;
 	const struct		filterops *kn_fop;
 	void			*kn_hook;	/* [o] */

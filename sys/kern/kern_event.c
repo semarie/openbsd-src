@@ -137,6 +137,11 @@ int	filt_timerattach(struct knote *kn);
 void	filt_timerdetach(struct knote *kn);
 int	filt_timermodify(struct kevent *kev, struct knote *kn);
 int	filt_timerprocess(struct knote *kn, struct kevent *kev);
+int	filt_userattach(struct knote *kn);
+void	filt_userdetach(struct knote *kn);
+int	filt_user(struct knote *kn, long hint);
+int	filt_usermodify(struct kevent *kev, struct knote *kn);
+int	filt_userprocess(struct knote *kn, struct kevent *kev);
 void	filt_seltruedetach(struct knote *kn);
 
 const struct filterops kqread_filtops = {
@@ -169,6 +174,15 @@ const struct filterops timer_filtops = {
 	.f_process	= filt_timerprocess,
 };
 
+const struct filterops user_filtops = {
+	.f_flags	= FILTEROP_MPSAFE,
+	.f_attach	= filt_userattach,
+	.f_detach	= filt_userdetach,
+	.f_event	= filt_user,
+	.f_modify	= filt_usermodify,
+	.f_process	= filt_userprocess,
+};
+
 struct	pool knote_pool;
 struct	pool kqueue_pool;
 int kq_ntimeouts = 0;
@@ -189,6 +203,7 @@ const struct filterops *const sysfilt_ops[] = {
 	&timer_filtops,			/* EVFILT_TIMER */
 	&file_filtops,			/* EVFILT_DEVICE */
 	&file_filtops,			/* EVFILT_EXCEPT */
+	&user_filtops,			/* EVFILT_USER */
 };
 
 void
@@ -479,7 +494,6 @@ filt_timermodify(struct kevent *kev, struct knote *kn)
 	struct timeout *to = kn->kn_hook;
 
 	/* Reset the timer. Any pending events are discarded. */
-
 	timeout_del_barrier(to);
 
 	mtx_enter(&kq->kq_lock);
@@ -501,7 +515,6 @@ int
 filt_timerprocess(struct knote *kn, struct kevent *kev)
 {
 	int active, s;
-
 	s = splsoftclock();
 	active = (kn->kn_data != 0);
 	if (active)
@@ -511,6 +524,102 @@ filt_timerprocess(struct knote *kn, struct kevent *kev)
 	return (active);
 }
 
+int
+filt_userattach(struct knote *kn)
+{
+	kn->kn_hook = NULL;
+
+	if (kn->kn_sfflags & NOTE_TRIGGER)
+		kn->kn_ptr.p_hookid = 1;
+	else
+		kn->kn_ptr.p_hookid = 0;
+
+	return (0);
+}
+
+void
+filt_userdetach(struct knote *kn)
+{
+	/* nothing to do */
+}
+
+int
+filt_user(struct knote *kn, long hint)
+{
+	return (kn->kn_ptr.p_hookid);
+}
+
+int
+filt_usermodify(struct kevent *kev, struct knote *kn)
+{
+	u_int ffctrl;
+
+	if (kev->fflags & NOTE_TRIGGER)
+		kn->kn_ptr.p_hookid = 1;
+
+	ffctrl = kev->fflags & NOTE_FFCTRLMASK;
+	kev->fflags &= NOTE_FFLAGSMASK;
+
+	knote_modify(kev, kn);
+	
+	switch (ffctrl) {
+	case NOTE_FFNOP:
+		break;
+
+	case NOTE_FFAND:
+		kn->kn_fflags &= kev->fflags;
+		break;
+
+	case NOTE_FFOR:
+		kn->kn_fflags |= kev->fflags;
+		break;
+
+	case NOTE_FFCOPY:
+		kn->kn_fflags = kev->fflags;
+		break;
+
+	default:
+		/* XXX Return error? */
+		break;
+	}
+	/* We just happen to copy this value as well. Undocumented. */
+	kn->kn_data = kev->data;
+
+	/*
+	 * This is not the correct use of EV_CLEAR in an event
+	 * modification, it should have been passed as a NOTE instead.
+	 * But we need to maintain compatibility with Apple & FreeBSD.
+	 *
+	 * Note however that EV_CLEAR can still be used when doing
+	 * the initial registration of the event and works as expected
+	 * (clears the event on reception).
+	 */
+	if (kev->flags & EV_CLEAR) {
+		kn->kn_ptr.p_hookid = 0;
+		/*
+		 * Clearing kn->kn_data is fine, since it gets set
+		 * every time anyway. We just shouldn't clear
+		 * kn->kn_fflags here, since that would limit the
+		 * possible uses of this API. NOTE_FFAND or
+		 * NOTE_FFCOPY should be used for explicitly clearing
+		 * kn->kn_fflags.
+		 */
+		kn->kn_data = 0;
+	}
+	
+	return (kn->kn_ptr.p_hookid);
+}
+
+int
+filt_userprocess(struct knote *kn, struct kevent *kev)
+{
+	knote_submit(kn, kev);
+	
+	if (kn->kn_flags & EV_CLEAR)
+		kn->kn_ptr.p_hookid = 0;
+	
+	return (kn->kn_ptr.p_hookid);
+}
 
 /*
  * filt_seltrue:
@@ -1169,6 +1278,27 @@ again:
 		filter_detach(kn);
 		knote_drop(kn, p);
 		goto done;
+	} else {
+		/*
+		 * Modify an existing event.
+		 *
+		 * The user may change some filter values after the
+		 * initial EV_ADD, but doing so will not reset any
+		 * filters which have already been triggered.
+		 */
+		if (filter_modify(kev, kn))
+			knote_activate(kn);
+		if (kev->flags & EV_ERROR) {
+			error = kev->data;
+			goto release;
+		}
+
+		/*
+		 * Execute the filter event to immediately activate the
+		 * knote if necessary.
+		 */
+		if (filter_process(kn, NULL))
+			knote_activate(kn);
 	}
 
 	if ((kev->flags & EV_DISABLE) && ((kn->kn_status & KN_DISABLED) == 0))
