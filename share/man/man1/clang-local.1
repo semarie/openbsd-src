@@ -127,6 +127,13 @@ has
 enabled by default on amd64 to protect against branch target injection attacks.
 It can be disabled with
 .Fl mno-retpoline .
+.It
+A new warning for
+.Cm %n
+format specifier usage in
+.Xr printf 3
+family functions has been added in
+.Fl Wformat-security .
 .El
 .Sh SEE ALSO
 .Xr clang 1
