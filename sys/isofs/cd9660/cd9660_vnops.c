@@ -666,10 +666,6 @@ cd9660_readlink(void *v)
 int
 cd9660_link(void *v)
 {
-	struct vop_link_args *ap = v;
-
-	VOP_ABORTOP(ap->a_dvp, ap->a_cnp);
-	vput(ap->a_dvp);
 	return (EROFS);
 }
 

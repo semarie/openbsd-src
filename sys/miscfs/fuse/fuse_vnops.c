@@ -639,27 +639,22 @@ fusefs_link(void *v)
 	fmp = (struct fusefs_mnt *)ip->ufs_ino.i_ump;
 
 	if (!fmp->sess_init) {
-		VOP_ABORTOP(dvp, cnp);
 		error = ENXIO;
 		goto out2;
 	}
 	if (fmp->undef_op & UNDEF_LINK) {
-		VOP_ABORTOP(dvp, cnp);
 		error = ENOSYS;
 		goto out2;
 	}
 	if (vp->v_type == VDIR) {
-		VOP_ABORTOP(dvp, cnp);
 		error = EPERM;
 		goto out2;
 	}
 	if (dvp->v_mount != vp->v_mount) {
-		VOP_ABORTOP(dvp, cnp);
 		error = EXDEV;
 		goto out2;
 	}
 	if (dvp != vp && (error = vn_lock(vp, LK_EXCLUSIVE))) {
-		VOP_ABORTOP(dvp, cnp);
 		goto out2;
 	}
 
@@ -688,7 +683,6 @@ out1:
 	if (dvp != vp)
 		VOP_UNLOCK(vp);
 out2:
-	vput(dvp);
 	return (error);
 }
 

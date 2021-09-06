@@ -437,14 +437,21 @@ VOP_LINK(struct vnode *dvp, struct vnode *vp, struct componentname *cnp)
 
 	ASSERT_VP_ISLOCKED(dvp);
 
-	if (dvp->v_op->vop_link == NULL)
-		return (EOPNOTSUPP);
+	if (dvp->v_op->vop_link == NULL) {
+		r = EOPNOTSUPP;
+		goto out;
+	}
 
 	dvp->v_inflight++;
 	vp->v_inflight++;
 	r = (dvp->v_op->vop_link)(&a);
 	dvp->v_inflight--;
 	vp->v_inflight--;
+
+out:
+	if (r != 0)
+		VOP_ABORTOP(dvp, cnp);
+	vput(dvp);	
 	return r;
 }
 

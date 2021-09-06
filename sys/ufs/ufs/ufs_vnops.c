@@ -626,27 +626,22 @@ ufs_link(void *v)
 		panic("ufs_link: no name");
 #endif
 	if (vp->v_type == VDIR) {
-		VOP_ABORTOP(dvp, cnp);
 		error = EPERM;
 		goto out2;
 	}
 	if (dvp->v_mount != vp->v_mount) {
-		VOP_ABORTOP(dvp, cnp);
 		error = EXDEV;
 		goto out2;
 	}
 	if (dvp != vp && (error = vn_lock(vp, LK_EXCLUSIVE))) {
-		VOP_ABORTOP(dvp, cnp);
 		goto out2;
 	}
 	ip = VTOI(vp);
 	if ((nlink_t) DIP(ip, nlink) >= LINK_MAX) {
-		VOP_ABORTOP(dvp, cnp);
 		error = EMLINK;
 		goto out1;
 	}
 	if (DIP(ip, flags) & (IMMUTABLE | APPEND)) {
-		VOP_ABORTOP(dvp, cnp);
 		error = EPERM;
 		goto out1;
 	}
@@ -673,7 +668,6 @@ out1:
 	if (dvp != vp)
 		VOP_UNLOCK(vp);
 out2:
-	vput(dvp);
 	return (error);
 }
 

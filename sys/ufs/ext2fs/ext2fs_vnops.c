@@ -426,27 +426,22 @@ ext2fs_link(void *v)
 		panic("ext2fs_link: no name");
 #endif
 	if (vp->v_type == VDIR) {
-		VOP_ABORTOP(dvp, cnp);
 		error = EISDIR;
 		goto out2;
 	}
 	if (dvp->v_mount != vp->v_mount) {
-		VOP_ABORTOP(dvp, cnp);
 		error = EXDEV;
 		goto out2;
 	}
 	if (dvp != vp && (error = vn_lock(vp, LK_EXCLUSIVE))) {
-		VOP_ABORTOP(dvp, cnp);
 		goto out2;
 	}
 	ip = VTOI(vp);
 	if ((nlink_t)ip->i_e2fs_nlink >= LINK_MAX) {
-		VOP_ABORTOP(dvp, cnp);
 		error = EMLINK;
 		goto out1;
 	}
 	if (ip->i_e2fs_flags & (EXT2_IMMUTABLE | EXT2_APPEND)) {
-		VOP_ABORTOP(dvp, cnp);
 		error = EPERM;
 		goto out1;
 	}
@@ -464,7 +459,6 @@ out1:
 	if (dvp != vp)
 		VOP_UNLOCK(vp);
 out2:
-	vput(dvp);
 	return (error);
 }
 

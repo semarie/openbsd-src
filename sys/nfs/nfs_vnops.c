@@ -1768,14 +1768,10 @@ nfs_link(void *v)
 	info.nmi_v3 = NFS_ISV3(vp);
 
 	if (dvp->v_mount != vp->v_mount) {
-		pool_put(&namei_pool, cnp->cn_pnbuf);
-		vput(dvp);
 		return (EXDEV);
 	}
 	error = vn_lock(vp, LK_EXCLUSIVE);
 	if (error != 0) {
-		VOP_ABORTOP(dvp, cnp);
-		vput(dvp);
 		return (error);
 	}
 
@@ -1812,7 +1808,6 @@ nfsmout:
 	VN_KNOTE(vp, NOTE_LINK);
 	VN_KNOTE(dvp, NOTE_WRITE);
 	VOP_UNLOCK(vp);
-	vput(dvp);
 	return (error);
 }
 

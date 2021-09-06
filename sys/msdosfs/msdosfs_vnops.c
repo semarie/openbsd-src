@@ -830,10 +830,6 @@ msdosfs_remove(void *v)
 int
 msdosfs_link(void *v)
 {
-	struct vop_link_args *ap = v;
-
-	VOP_ABORTOP(ap->a_dvp, ap->a_cnp);
-	vput(ap->a_dvp);
 	return (EOPNOTSUPP);
 }
 

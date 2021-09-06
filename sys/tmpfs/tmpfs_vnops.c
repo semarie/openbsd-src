@@ -765,16 +765,12 @@ tmpfs_link(void *v)
 	KASSERT(VOP_ISLOCKED(dvp));
 
 	if (vp->v_type == VDIR) {
-		VOP_ABORTOP(dvp, cnp);
-		vput(dvp);
 		return EPERM;
 	}
 
 	KASSERT(dvp != vp);
 
 	if (dvp->v_mount != vp->v_mount) {
-		VOP_ABORTOP(dvp, cnp);
-		vput(dvp);
 		return EXDEV;
 	}
 
@@ -823,7 +819,6 @@ tmpfs_link(void *v)
 out:
 	pool_put(&namei_pool, cnp->cn_pnbuf);
 	VOP_UNLOCK(vp);
-	vput(dvp);
 	return error;
 }
 
