@@ -862,7 +862,7 @@ sys___realpath(struct proc *p, void *v, register_t *retval)
 		syscallarg(const char *) pathname;
 		syscallarg(char *) resolved;
 	} */ *uap = v;
-	char *pathname, *c;
+	char *pathname;
 	char *rpbuf;
 	struct nameidata nd;
 	size_t pathlen;
@@ -916,11 +916,6 @@ sys___realpath(struct proc *p, void *v, register_t *retval)
 		free(cwdbuf, M_TEMP, cwdlen);
 	}
 
-	/* find root "/" or "//" */
-	for (c = pathname; *c != '\0'; c++) {
-		if (*c != '/')
-			break;
-	}
 	NDINIT(&nd, LOOKUP, FOLLOW | SAVENAME | REALPATH, UIO_SYSSPACE,
 	    pathname, p);
 
