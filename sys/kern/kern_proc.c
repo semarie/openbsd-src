@@ -520,15 +520,16 @@ db_show_all_procs(db_expr_t addr, int haddr, db_expr_t count, char *modif)
 	if (modif[0] == 0)
 		modif[0] = 'n';			/* default == normal mode */
 
-	mode = "mawno";
+	mode = "mawnot";
 	while (*mode && *mode != modif[0])
 		mode++;
 	if (*mode == 0 || *mode == 'm') {
-		db_printf("usage: show all procs [/a] [/n] [/w]\n");
+		db_printf("usage: show all procs [/a] [/n] [/w] [/t]\n");
 		db_printf("\t/a == show process address info\n");
 		db_printf("\t/n == show normal process info [default]\n");
 		db_printf("\t/w == show process pgrp/wait info\n");
 		db_printf("\t/o == show normal info for non-idle SONPROC\n");
+		db_printf("\t/t == show stack trace\n");
 		return;
 	}
 
@@ -552,6 +553,10 @@ db_show_all_procs(db_expr_t addr, int haddr, db_expr_t count, char *modif)
 		skipzomb = 1;
 		db_printf("    TID  %5s  %5s  %10s %10s  %3s  %-30s\n",
 		    "PID", "UID", "PRFLAGS", "PFLAGS", "CPU", "COMMAND");
+		break;
+	case 't':
+		db_printf("    TID  %-15s  %-5s  %18s  %s\n",
+		    "COMMAND", "PGRP", "WAIT-CHANNEL", "WAIT-MSG");
 		break;
 	}
 
@@ -618,6 +623,23 @@ db_show_all_procs(db_expr_t addr, int haddr, db_expr_t count, char *modif)
 					    pr->ps_comm);
 					break;
 
+				case 't': /* XXX */ {
+					extern void db_stack_trace_print(db_expr_t, int, db_expr_t, char *, int (*)(const char *, ...));
+
+					db_printf("%-15s  %-5d  %18p  %s\n",
+					    pr->ps_comm,
+					    (pr->ps_pgrp ? pr->ps_pgrp->pg_id : -1),
+					    p->p_wchan,
+					    (p->p_wchan && p->p_wmesg) ? p->p_wmesg : "");
+					    
+					db_stack_trace_print(
+					    (db_expr_t)p->p_tid /* addr */,
+					    1 /* have_addr */,
+					    1024 /* count */,
+					    "t" /* modif */,
+					    db_printf);
+					}
+					break;
 				}
 			}
 		}
