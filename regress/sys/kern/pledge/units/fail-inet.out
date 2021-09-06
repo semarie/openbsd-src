@@ -1,0 +1,3 @@
+socket(2) with "inet"
+socket(2) without "inet"
+Abort trap (core dumped) 

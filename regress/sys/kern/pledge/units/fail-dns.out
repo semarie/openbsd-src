@@ -1,0 +1,3 @@
+socket(2) with SOCK_DNS
+socket(2) without SOCK_DNS
+Abort trap (core dumped) 
