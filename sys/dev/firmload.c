@@ -53,7 +53,6 @@ loadfirmware(const char *name, u_char **bufp, size_t *buflen)
 
 	NDINIT(&nid, LOOKUP, NOFOLLOW|LOCKLEAF|KERNELPATH,
 	    UIO_SYSSPACE, path, p);
-	nid.ni_pledge = PLEDGE_RPATH;
 	error = namei(&nid);
 #ifdef RAMDISK_HOOKS
 	/* try again with mounted disk */
@@ -66,7 +65,6 @@ loadfirmware(const char *name, u_char **bufp, size_t *buflen)
 
 		NDINIT(&nid, LOOKUP, NOFOLLOW|LOCKLEAF|KERNELPATH,
 		    UIO_SYSSPACE, path, p);
-		nid.ni_pledge = PLEDGE_RPATH;
 		error = namei(&nid);
 	}
 #endif
