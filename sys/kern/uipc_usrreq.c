@@ -554,6 +554,7 @@ unp_bind(struct unpcb *unp, struct mbuf *nam, struct proc *p)
 	NDINIT(&nd, CREATE, NOFOLLOW | LOCKPARENT, UIO_SYSSPACE,
 	    soun->sun_path, p);
 	nd.ni_pledge = PLEDGE_UNIX;
+	nd.ni_unveil = UNVEIL_CREATE;
 
 	KERNEL_LOCK();
 /* SHOULD BE ABLE TO ADOPT EXISTING AND wakeup() ALA FIFO's */
@@ -621,6 +622,7 @@ unp_connect(struct socket *so, struct mbuf *nam, struct proc *p)
 
 	NDINIT(&nd, LOOKUP, FOLLOW | LOCKLEAF, UIO_SYSSPACE, soun->sun_path, p);
 	nd.ni_pledge = PLEDGE_UNIX;
+	nd.ni_unveil = UNVEIL_READ | UNVEIL_WRITE;
 
 	unp->unp_flags |= UNP_CONNECTING;
 

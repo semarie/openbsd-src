@@ -222,7 +222,7 @@ main(int argc, char *argv[])
 	if (unveil(_PATH_RESCONF_NEW, "rwc") == -1)
 		lerr(1, "unveil " _PATH_RESCONF_NEW);
 #ifndef SMALL
-	if (unveil(_PATH_UNWIND_SOCKET, "r") == -1)
+	if (unveil(_PATH_UNWIND_SOCKET, "rw") == -1)
 		lerr(1, "unveil " _PATH_UNWIND_SOCKET);
 #endif
 

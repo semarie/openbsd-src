@@ -1125,6 +1125,7 @@ retry:
 		NDINIT(&cnd, LOOKUP, NOFOLLOW|LOCKLEAF, UIO_SYSSPACE,
 		    pti->pty_pn, p);
 		cnd.ni_pledge = PLEDGE_RPATH | PLEDGE_WPATH;
+		snd.ni_unveil = UNVEIL_READ | UNVEIL_WRITE;
 		if ((error = ptm_vn_open(&cnd)) != 0) {
 			/*
 			 * Check if the master open failed because we lost
