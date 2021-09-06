@@ -86,6 +86,13 @@ VOP_LOOKUP(struct vnode *dvp, struct vnode **vpp,
 	dvp->v_inflight++;
 	r = (dvp->v_op->vop_lookup)(&a);
 	dvp->v_inflight--;
+
+#ifdef DIAGNOSTIC
+	if (r != 0)
+		/* XXX already checked in namei() */
+		KASSERT(*vpp == NULL);
+#endif
+
 	return r;
 }
 
@@ -108,6 +115,12 @@ VOP_CREATE(struct vnode *dvp, struct vnode **vpp,
 	dvp->v_inflight++;
 	r = (dvp->v_op->vop_create)(&a);
 	dvp->v_inflight--;
+
+#ifdef DIAGNOSTIC
+	if (r != 0)
+		KASSERT(*vpp == NULL);
+#endif
+	
 	return r;
 }
 
