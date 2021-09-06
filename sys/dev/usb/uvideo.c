@@ -2899,6 +2899,8 @@ uvideo_debug_file_open(struct uvideo_softc *sc)
 
 	NDINIT(&nd, 0, 0, UIO_SYSSPACE, name, p);
 	error = vn_open(&nd, O_CREAT | FWRITE | O_NOFOLLOW, S_IRUSR | S_IWUSR);
+	nd->ni_pledge = PLEDGE_CPATH | PLEDGE_WPATH;
+	nd->ni_unveil = UNVEIL_CREATE | UNVEIL_WRITE;
 	if (error) {
 		DPRINTF(1, "%s: %s: can't create debug file %s!\n",
 		    DEVNAME(sc), __func__, name);
