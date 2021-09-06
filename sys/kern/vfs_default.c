@@ -128,6 +128,12 @@ vop_generic_revoke(void *v)
 }
 
 int
+vop_generic_badop(void *v)
+{
+	panic("%s", __func__);
+}
+
+int
 vop_generic_bmap(void *v)
 {
 	struct vop_bmap_args *ap = v;

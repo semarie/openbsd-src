@@ -61,5 +61,4 @@ int mfs_close(void *);
 int mfs_inactive(void *);
 int mfs_reclaim(void *);
 int mfs_print(void *);
-int mfs_badop(void *);
 

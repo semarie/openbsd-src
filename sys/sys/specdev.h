@@ -92,7 +92,6 @@ extern struct vnodechain speclisth[SPECHSZ];
 /*
  * Prototypes for special file operations on vnodes.
  */
-int	spec_badop(void *);
 int	spec_getattr(void *);
 int	spec_setattr(void *);
 int	spec_access(void *);

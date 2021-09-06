@@ -628,6 +628,7 @@ int vfs_getcwd_getcache(struct vnode **, struct vnode **, char **, char *);
 
 /* vfs_default.c */
 int	vop_generic_abortop(void *);
+int	vop_generic_badop(void *);
 int	vop_generic_bmap(void *);
 int	vop_generic_bwrite(void *);
 int	vop_generic_islocked(void *);

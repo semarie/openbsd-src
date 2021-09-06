@@ -36,7 +36,6 @@
 /*
  * Prototypes for fifo operations on vnodes.
  */
-int	fifo_badop(void *);
 int	fifo_ebadf(void *);
 
 int	fifo_open(void *);
