@@ -208,6 +208,8 @@ malloc(size_t size, int type, int flags)
 	mtx_enter(&malloc_mtx);
 #ifdef KMEMSTATS
 	while (ksp->ks_memuse >= ksp->ks_limit) {
+		int timo, ret;
+		
 		if (flags & M_NOWAIT) {
 			mtx_leave(&malloc_mtx);
 			return (NULL);
@@ -219,7 +221,17 @@ malloc(size_t size, int type, int flags)
 #endif
 		if (ksp->ks_limblocks < 65535)
 			ksp->ks_limblocks++;
-		msleep_nsec(ksp, &malloc_mtx, PSWP+2, memname[type], INFSLP);
+		
+		if (ISSET(flags, M_CANFAIL))
+			timo = SEC_TO_NSEC(5); /* XXX */
+		else
+			timo = INFSLP;
+		
+		ret = msleep_nsec(ksp, &malloc_mtx, PSWP+2, memname[type], timo);
+		if (ret == EWOULDBLOCK) {
+			mtx_leave(&malloc_mtx);
+			return (NULL);
+		}
 	}
 	ksp->ks_memuse += allocsize; /* account for this early */
 	ksp->ks_size |= 1 << indx;
