@@ -182,15 +182,7 @@ ufs_mknod(void *v)
 		 */
 		DIP_ASSIGN(ip, rdev, vap->va_rdev);
 	}
-	/*
-	 * Remove inode so that it will be reloaded by VFS_VGET and
-	 * checked to see if it is an alias of an existing entry in
-	 * the inode cache.
-	 */
-	vput(*vpp);
-	(*vpp)->v_type = VNON;
-	vgone(*vpp);
-	*vpp = NULL;
+
 	return (0);
 }
 

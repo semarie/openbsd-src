@@ -1083,14 +1083,6 @@ fusefs_mknod(void *v)
 	*vpp = tdp;
 	VN_KNOTE(ap->a_dvp, NOTE_WRITE);
 
-	/* Remove inode so that it will be reloaded by VFS_VGET and
-	 * checked to see if it is an alias of an existing entry in
-	 * the inode cache.
-	 */
-	vput(*vpp);
-	(*vpp)->v_type = VNON;
-	vgone(*vpp);
-	*vpp = NULL;
 out:
 	fb_delete(fbuf);
 	return (error);

@@ -345,9 +345,6 @@ tmpfs_mknod(void *v)
 
 	error = tmpfs_alloc_file(dvp, vpp, vap, cnp, NULL);
 
-	if (error == 0)
-		vput(*vpp);
-
 	return error;
 }
 

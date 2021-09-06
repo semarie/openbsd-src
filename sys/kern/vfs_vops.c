@@ -137,12 +137,28 @@ VOP_MKNOD(struct vnode *dvp, struct vnode **vpp,
 
 	ASSERT_VP_ISLOCKED(dvp);
 
-	if (dvp->v_op->vop_mknod == NULL)
-		return (EOPNOTSUPP);
+	if (dvp->v_op->vop_mknod == NULL) {
+		r = EOPNOTSUPP;
+		goto out;
+	}
 
 	dvp->v_inflight++;
 	r = (dvp->v_op->vop_mknod)(&a);
 	dvp->v_inflight--;
+
+out:
+	if (r == 0) {
+		/*
+		 * Remove inode so that it will be reloaded by VFS_VGET and
+		 * checked to see if it is an alias of an existing entry in
+		 * the inode cache.
+		 */
+		vput(*vpp);
+		(*vpp)->v_type = VNON;
+		vgone(*vpp);
+		*vpp = NULL;
+	}
+
 	return r;
 }
 

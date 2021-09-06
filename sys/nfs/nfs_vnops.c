@@ -1397,8 +1397,6 @@ nfs_mknod(void *v)
 	int error;
 
 	error = nfs_mknodrpc(ap->a_dvp, &newvp, ap->a_cnp, ap->a_vap);
-	if (!error)
-		vput(newvp);
 
 	VN_KNOTE(ap->a_dvp, NOTE_WRITE);
 
