@@ -9105,8 +9105,7 @@ def warn_os_log_format_narg : Error<
  "os_log() '%%n' format specifier is not allowed">, DefaultError;
 
 def warn_format_narg : Warning<
-  "'%%n' format specifier support is deactivated and will call abort(3)">,
-    InGroup<FormatSecurity>;
+  "'%%n' format specifier support is deactivated and will call abort(3)">;
 
 // Statements.
 def err_continue_not_in_loop : Error<
