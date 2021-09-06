@@ -258,6 +258,18 @@ struct fusefs_args {
 };
 
 /*
+ * Arguments to mount QWE filesystems
+ */
+struct qwefs_args {
+	char    *fspec;                 /* block special device to mount */
+	struct  export_args export_info;/* network export information */
+
+	uid_t   uid;                    /* uid that owns qwefs files */
+	gid_t   gid;                    /* gid that owns qwefs files */
+	mode_t  mode;                   /* default mode for qwefs perms */
+};
+
+/*
  * file system statistics
  */
 
@@ -273,6 +285,7 @@ union mount_info {
 	struct msdosfs_args msdosfs_args;
 	struct ntfs_args ntfs_args;
 	struct tmpfs_args tmpfs_args;
+	struct qwefs_args qwefs_args;
 	char __align[160];	/* 64-bit alignment and room to grow */
 };
 
@@ -325,6 +338,7 @@ struct statfs {
 #define	MOUNT_UDF	"udf"		/* UDF */
 #define	MOUNT_TMPFS	"tmpfs"		/* tmpfs */
 #define	MOUNT_FUSEFS	"fuse"		/* FUSE */
+#define	MOUNT_QWEFS	"qwefs"		/* QWE Filesystem */
 
 /*
  * Structure per mounted file system.  Each mounted file system has an
@@ -558,6 +572,7 @@ extern	const struct vfsops ntfs_vfsops;
 extern	const struct vfsops udf_vfsops;
 extern	const struct vfsops fusefs_vfsops;
 extern	const struct vfsops tmpfs_vfsops;
+extern	const struct vfsops qwefs_vfsops;
 
 #include <net/radix.h>
 #include <sys/socket.h>		/* XXX for AF_MAX */

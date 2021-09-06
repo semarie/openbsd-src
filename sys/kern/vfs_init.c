@@ -100,6 +100,11 @@ static struct vfsconf vfsconflist[] = {
 	{ &tmpfs_vfsops, MOUNT_TMPFS, 19, 0, MNT_LOCAL,
 	    sizeof(struct tmpfs_args) },
 #endif
+
+#ifdef QWEFS
+	{ &qwefs_vfsops, MOUNT_QWEFS, 20, 0, MNT_LOCAL,
+	    sizeof(struct qwefs_args) },
+#endif
 };
 
 

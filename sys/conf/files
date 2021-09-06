@@ -801,6 +801,8 @@ file tmpfs/tmpfs_vfsops.c		tmpfs
 file tmpfs/tmpfs_vnops.c		tmpfs
 file tmpfs/tmpfs_specops.c		tmpfs
 file tmpfs/tmpfs_fifoops.c		tmpfs & fifo
+file qwefs/qwefs_vfsops.c		qwefs
+file qwefs/qwefs_vops.c			qwefs
 file net/art.c
 file net/bpf.c				bpfilter		needs-count
 file net/bpf_filter.c			bpfilter
