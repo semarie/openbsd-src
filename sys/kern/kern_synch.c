@@ -541,6 +541,46 @@ unsleep(struct proc *p)
 	}
 }
 
+
+/*
+ * Return the number of processes sleeping on the specified identifier.
+ */
+u_int
+count_wakeable(const volatile void *ident)
+{
+	struct slpque *qp;
+	struct proc *p;
+	struct proc *pnext;
+	int n = 0;
+	int s;
+
+	SCHED_LOCK(s);
+	qp = &slpque[LOOKUP(ident)];
+	for (p = TAILQ_FIRST(qp); p != NULL && n != 0; p = pnext) {
+		pnext = TAILQ_NEXT(p, p_runq);
+#ifdef DIAGNOSTIC
+		/*
+		 * If the rwlock passed to rwsleep() is contended, the
+		 * CPU will end up calling wakeup() between sleep_setup()
+		 * and sleep_finish().
+		 */
+		if (p == curproc) {
+			KASSERT(p->p_stat == SONPROC);
+			continue;
+		}
+		if (p->p_stat != SSLEEP && p->p_stat != SSTOP)
+			panic("%s: p_stat is %d", __func__, (int)p->p_stat);
+#endif
+
+		if (p->p_wchan != NULL &&
+		    ((ident == NULL) || (p->p_wchan == ident)))
+			n++;
+	}
+	SCHED_UNLOCK(s);
+
+	return n;
+}
+
 /*
  * Make a number of processes sleeping on the specified identifier runnable.
  */
