@@ -119,13 +119,13 @@ int
 namei(struct nameidata *ndp)
 {
 	struct filedesc *fdp;		/* pointer to file descriptor state */
-	char *cp;			/* pointer into pathname argument */
 	struct vnode *dp;		/* the directory we are searching */
 	struct iovec aiov;		/* uio for reading symbolic links */
 	struct uio auio;
 	int error, linklen;
 	struct componentname *cnp = &ndp->ni_cnd;
 	struct proc *p = cnp->cn_proc;
+	char *pnbuf_tmp = NULL;
 
 	ndp->ni_cnd.cn_cred = ndp->ni_cnd.cn_proc->p_ucred;
 #ifdef DIAGNOSTIC
@@ -169,6 +169,7 @@ namei(struct nameidata *ndp)
 	 *  Strip trailing slashes, as requested
 	 */
 	if (cnp->cn_flags & STRIPSLASHES) {
+		char *cp;
 		char *end = cnp->cn_pnbuf + ndp->ni_pathlen - 2;
 
 		cp = end;
@@ -272,13 +273,13 @@ namei(struct nameidata *ndp)
 			VOP_UNLOCK(ndp->ni_dvp);
 		if (ndp->ni_loopcnt++ >= SYMLOOP_MAX) {
 			error = ELOOP;
-			break;
+			goto badlink;
 		}
-		if (ndp->ni_pathlen > 1)
-			cp = pool_get(&namei_pool, PR_WAITOK);
-		else
-			cp = cnp->cn_pnbuf;
-		aiov.iov_base = cp;
+		if (ndp->ni_pathlen > 1) {
+			pnbuf_tmp = pool_get(&namei_pool, PR_WAITOK);
+			aiov.iov_base = pnbuf_tmp;
+		} else
+			aiov.iov_base = cnp->cn_pnbuf;
 		aiov.iov_len = MAXPATHLEN;
 		auio.uio_iov = &aiov;
 		auio.uio_iovcnt = 1;
@@ -288,12 +289,9 @@ namei(struct nameidata *ndp)
 		auio.uio_procp = cnp->cn_proc;
 		auio.uio_resid = MAXPATHLEN;
 		error = VOP_READLINK(ndp->ni_vp, &auio, cnp->cn_cred);
-		if (error) {
-badlink:
-			if (ndp->ni_pathlen > 1)
-				pool_put(&namei_pool, cp);
-			break;
-		}
+		if (error)
+			goto badlink;
+
 		linklen = MAXPATHLEN - auio.uio_resid;
 		if (linklen == 0) {
 			error = ENOENT;
@@ -303,10 +301,12 @@ badlink:
 			error = ENAMETOOLONG;
 			goto badlink;
 		}
-		if (ndp->ni_pathlen > 1) {
-			memcpy(cp + linklen, ndp->ni_next, ndp->ni_pathlen);
+		if (pnbuf_tmp != NULL) {
+			memcpy(pnbuf_tmp + linklen, ndp->ni_next,
+			    ndp->ni_pathlen);
 			pool_put(&namei_pool, cnp->cn_pnbuf);
-			cnp->cn_pnbuf = cp;
+			cnp->cn_pnbuf = pnbuf_tmp;
+			pnbuf_tmp = NULL;
 		} else
 			cnp->cn_pnbuf[linklen] = '\0';
 		ndp->ni_pathlen += linklen;
@@ -330,6 +330,10 @@ badlink:
 			component_pop(cnp);
 		}
 	}
+
+badlink:
+	if (pnbuf_tmp != NULL)
+		pool_put(&namei_pool, pnbuf_tmp);
 	vrele(ndp->ni_dvp);
 	vput(ndp->ni_vp);
 fail:
