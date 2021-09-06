@@ -81,6 +81,7 @@ file	dev/pci/drm/drm_vma_manager.c		drm
 file	dev/pci/drm/hdmi.c			drm
 file	dev/pci/drm/linux_list_sort.c		drm
 file	dev/pci/drm/linux_radix.c		drm
+file	dev/pci/drm/drm_ddb.c			drm & amdgpu
 
 define	ttm
 file	dev/pci/drm/ttm/ttm_agp_backend.c	ttm & agp
