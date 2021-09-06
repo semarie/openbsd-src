@@ -52,6 +52,12 @@ DT_STATIC_PROBE1(raw_syscalls, sys_enter, "register_t");
 DT_STATIC_PROBE1(raw_syscalls, sys_exit, "register_t");
 
 /*
+ * Debug
+ */
+DT_STATIC_PROBE1(debug, probe1, "uint32_t");
+DT_STATIC_PROBE2(debug, probe2, "uint32_t", "void *");
+
+/*
  * UVM
  */
 DT_STATIC_PROBE3(uvm, fault, "vaddr_t", "vm_fault_t", "vm_prot_t");
@@ -90,6 +96,9 @@ struct dt_probe *dtps_static[] = {
 	/* Raw syscalls */
 	&_DT_STATIC_P(raw_syscalls, sys_enter),
 	&_DT_STATIC_P(raw_syscalls, sys_exit),
+	/* Debug */
+	&_DT_STATIC_P(debug, probe1),
+	&_DT_STATIC_P(debug, probe2),
 	/* UVM */
 	&_DT_STATIC_P(uvm, fault),
 	&_DT_STATIC_P(uvm, map_insert),
