@@ -744,13 +744,6 @@ tmpfs_remove(void *v)
 	error = 0;
 out:
 	pool_put(&namei_pool, cnp->cn_pnbuf);
-	/* Drop the references and unlock the vnodes. */
-	vput(vp);
-	if (dvp == vp) {
-		vrele(dvp);
-	} else {
-		vput(dvp);
-	}
 	return error;
 }
 

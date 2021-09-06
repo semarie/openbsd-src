@@ -1520,11 +1520,6 @@ fusefs_remove(void *v)
 	VN_KNOTE(dvp, NOTE_WRITE);
 	fb_delete(fbuf);
 out:
-	if (dvp == vp)
-		vrele(vp);
-	else
-		vput(vp);
-	vput(dvp);
 	return (error);
 }
 

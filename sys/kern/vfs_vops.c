@@ -391,12 +391,22 @@ VOP_REMOVE(struct vnode *dvp, struct vnode *vp, struct componentname *cnp)
 	ASSERT_VP_ISLOCKED(dvp);
 	ASSERT_VP_ISLOCKED(vp);
 
-	if (dvp->v_op->vop_remove == NULL)
-		return (EOPNOTSUPP);
+	if (dvp->v_op->vop_remove == NULL) {
+		r = EOPNOTSUPP;
+		goto out;
+	}
 
 	dvp->v_inflight++;
 	r = (dvp->v_op->vop_remove)(&a);
 	dvp->v_inflight--;
+
+out:
+	if (dvp == vp)
+		vrele(vp);
+	else
+		vput(vp);
+	vput(dvp);
+	
 	return r;
 }
 

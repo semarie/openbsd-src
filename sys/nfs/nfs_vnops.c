@@ -1572,11 +1572,6 @@ nfs_remove(void *v)
 	NFS_INVALIDATE_ATTRCACHE(np);
 	VN_KNOTE(vp, NOTE_DELETE);
 	VN_KNOTE(dvp, NOTE_WRITE);
-	if (vp == dvp)
-		vrele(vp);
-	else
-		vput(vp);
-	vput(dvp);
 	return (error);
 }
 

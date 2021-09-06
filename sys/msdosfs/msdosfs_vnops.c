@@ -819,12 +819,6 @@ msdosfs_remove(void *v)
 	printf("msdosfs_remove(), dep %p, v_usecount %d\n", dep,
 	    ap->a_vp->v_usecount);
 #endif
-	if (ddep == dep)
-		vrele(ap->a_vp);
-	else
-		vput(ap->a_vp);	/* causes msdosfs_inactive() to be called
-				 * via vrele() */
-	vput(ap->a_dvp);
 	return (error);
 }
 
