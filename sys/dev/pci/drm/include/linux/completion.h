@@ -25,20 +25,29 @@
 
 struct completion {
 	u_int done;
+	u_int waiters;
+	u_int32_t id;
 	struct mutex lock;
 };
 
 static inline void
 init_completion(struct completion *x)
 {
+	x->id = arc4random();
 	x->done = 0;
+	x->waiters = 0;
 	mtx_init(&x->lock, IPL_TTY);
 }
 
 static inline void
 reinit_completion(struct completion *x)
 {
+	mtx_enter(&x->lock);
+	if (x->waiters != 0)
+		printf("%s: lost %u waiters\n", __func__, x->waiters);
+	x->id = arc4random();
 	x->done = 0;
+	mtx_leave(&x->lock);
 }
 
 static inline u_long
@@ -50,7 +59,9 @@ wait_for_completion_timeout(struct completion *x, u_long timo)
 
 	mtx_enter(&x->lock);
 	while (x->done == 0) {
+		x->waiters++;
 		ret = msleep(x, &x->lock, 0, "wfct", timo);
+		x->waiters--;
 		if (ret) {
 			mtx_leave(&x->lock);
 			/* timeout */
@@ -67,11 +78,26 @@ wait_for_completion_timeout(struct completion *x, u_long timo)
 static inline void
 wait_for_completion(struct completion *x)
 {
+	u_int32_t id;
+	int timo = SEC_TO_NSEC(5);
+	int ret;
+	
 	KASSERT(!cold);
 
 	mtx_enter(&x->lock);
+	id = x->id;
 	while (x->done == 0) {
-		msleep_nsec(x, &x->lock, 0, "wfcom", INFSLP);
+		x->waiters++;
+		ret = msleep_nsec(x, &x->lock, 0, "wfcom", timo);
+		if (id != x->id) {
+			printf("%s: lost completion\n", __func__);
+			return;
+		}
+		x->waiters--;
+		if (ret == EWOULDBLOCK) {
+			timo = INFSLP;
+			printf("%s: timeout, rechecking\n", __func__);
+		}
 	}
 	if (x->done != UINT_MAX)
 		x->done--;
@@ -87,7 +113,9 @@ wait_for_completion_interruptible(struct completion *x)
 
 	mtx_enter(&x->lock);
 	while (x->done == 0) {
+		x->waiters++;
 		ret = msleep_nsec(x, &x->lock, PCATCH, "wfci", INFSLP);
+		x->waiters--;
 		if (ret) {
 			mtx_leave(&x->lock);
 			if (ret == EWOULDBLOCK)
@@ -111,7 +139,9 @@ wait_for_completion_interruptible_timeout(struct completion *x, u_long timo)
 
 	mtx_enter(&x->lock);
 	while (x->done == 0) {
+		x->waiters++;
 		ret = msleep(x, &x->lock, PCATCH, "wfcit", timo);
+		x->waiters--;
 		if (ret) {
 			mtx_leave(&x->lock);
 			if (ret == EWOULDBLOCK)
