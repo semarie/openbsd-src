@@ -565,6 +565,9 @@ witness_init(struct lock_object *lock, const struct lock_type *type)
 	    (class->lc_flags & LC_UPGRADABLE) == 0)
 		panic("%s: lock (%s) %s can not be upgradable",
 		    __func__, class->lc_name, lock->lo_name);
+	if ((lock->lo_flags & LO_INITIALIZED) == 0)
+		panic("%s: lock (%s) %s not properly initialized",
+		    __func__, class->lc_name, lock->lo_name);
 
 	/*
 	 * If we shouldn't watch this lock, then just clear lo_witness.
